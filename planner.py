@@ -56,3 +56,28 @@ def cancel(session, ref):
     if not changed:
         raise ValueError("预约不存在或已取消。")
     return bookings(session)
+
+def schedule():
+    with connect() as con:
+        occupied = BLOCKED | set(con.execute("SELECT space, slot FROM reservations"))
+    return {"slots": SLOTS, "spaces": [
+        dict(space, free={slot: (space["id"], slot) not in occupied for slot in SLOTS})
+        for space in DATA["spaces"]
+    ]}
+
+
+def reschedule(session, ref, slot):
+    if slot not in SLOTS:
+        raise ValueError("请选择有效时段。")
+    try:
+        with connect() as con:
+            old = con.execute("SELECT space, slot FROM reservations WHERE id=? AND session=?",
+                              (ref, session)).fetchone()
+            if not old:
+                raise ValueError("预约不存在或已取消。")
+            if (old[0], slot) in BLOCKED:
+                raise ValueError("目标时段已占用，原预约已保留。")
+            con.execute("UPDATE reservations SET slot=? WHERE id=? AND session=?", (slot, ref, session))
+    except sqlite3.IntegrityError as error:
+        raise ValueError("目标时段已占用，原预约已保留。") from error
+    return bookings(session)

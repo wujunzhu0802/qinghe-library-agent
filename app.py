@@ -3,7 +3,7 @@ import argparse
 import json
 import os
 import re
-from planner import available, bookings, cancel, reserve
+from planner import DATA, available, bookings, cancel, reserve, reschedule, schedule
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.error import URLError
 
@@ -31,14 +31,17 @@ class Handler(BaseHTTPRequestHandler):
         self.send(code, json.dumps(data, ensure_ascii=False).encode())
 
     def do_GET(self):
-        if self.path in ("/", "/slides"):
-            name = "demo.html" if self.path == "/" else "slides.html"
-            self.send(200, (ROOT / name).read_bytes(), "text/html")
+        if self.path == "/schedule":
+            return self.reply(200, schedule())
+        if self.path == "/policies":
+            return self.reply(200, DATA["policies"])
+        if self.path == "/":
+            self.send(200, (ROOT / "demo.html").read_bytes(), "text/html")
         else:
             self.reply(404, {"error": "页面不存在"})
 
     def do_POST(self):
-        if self.path in ("/plan", "/book", "/bookings", "/cancel"):
+        if self.path in ("/plan", "/book", "/bookings", "/cancel", "/reschedule"):
             return self.planner_request()
         if self.path != "/ask":
             return self.reply(404, {"error": "接口不存在"})
@@ -76,6 +79,8 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError("会话无效，请刷新网页。")
             if self.path == "/bookings":
                 result = bookings(session)
+            elif self.path == "/reschedule":
+                result = reschedule(session, body["id"], body["slot"])
             elif self.path == "/cancel":
                 result = cancel(session, body["id"])
             else:
