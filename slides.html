@@ -2,14 +2,33 @@
 <title>青禾｜开源 AI 技术实践期末汇报</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#102922;color:#18342b;font:clamp(17px,2.05vw,32px)/1.5 "Microsoft YaHei",sans-serif}article{display:none;min-height:100dvh;background:#f5f5e9;padding:8vh 9vw 13vh;border-top:9px solid #599677}article.on{display:block}article.cover{background:#102922;color:#fbfae9;border-color:#a8d19d}h1,h2{line-height:1.12;letter-spacing:-.04em;margin:.28em 0 .5em}h1{font-size:clamp(52px,10vw,150px)}h2{font-size:clamp(32px,5vw,78px)}p{margin:.55em 0}.tag{font-size:.67em;letter-spacing:.14em;color:#347258;font-weight:bold}.cover .tag{color:#b8dda9}.lead{font-size:1.3em}.dim{opacity:.78}.flow{margin:1.1em 0;border-block:1px solid #91ab98;padding:.6em 0;font-weight:bold}.rows p{border-top:1px solid #bfccbe;padding:.36em 0;margin:0}.rows b{color:#17664a}code{font-size:.78em}a{color:#166249}nav{position:fixed;bottom:0;left:0;right:0;background:#102922;color:#fff;padding:8px 5vw;display:flex;gap:12px;align-items:center;font-size:15px}nav span{margin-right:auto}button{font:inherit;border:1px solid #89a697;border-radius:5px;background:#254b3c;color:#fff;padding:6px 12px;cursor:pointer}@media print{nav{display:none}article,article.on{display:block;break-after:page;min-height:0;padding:36px}}
+
+.cover{position:relative;overflow:hidden}.cover-copy{position:relative;z-index:1}.cover-art{position:absolute;width:min(43vw,680px);right:5vw;bottom:11vh;opacity:.86}
+.diagram{display:block;width:100%;max-width:1100px;margin:1em 0}.demo-grid{display:grid;grid-template-columns:1fr 1.1fr;gap:4vw;align-items:start}
+.sample{margin:0;background:#fff;border:1px solid #c4d2c5;padding:1em;border-radius:12px;font-size:.73em;box-shadow:0 10px 30px #244e3415}.sample strong{color:#17664a}.sample p{border-bottom:1px solid #d5e1d8;padding-bottom:.55em}.sample small{display:block;color:#426655}
+@media(max-width:750px){.cover-art{opacity:.25;width:74vw}.demo-grid{grid-template-columns:1fr;gap:16px}}
 </style>
-<article class="cover on"><div class="tag">开源 AI 技术实践 · 期末汇报 · 路径 A</div><h1>青禾</h1><p class="lead">图书馆学习空间助手</p><p>从一句学习需求，到一条有出处的场地建议。</p><p class="dim" id="identity">【姓名】 · 【班级】 · 【学号】</p></article>
+<article class="cover on">
+<svg class="cover-art" viewBox="0 0 600 450" role="img" aria-label="展开的书与三个工具节点">
+<circle cx="313" cy="225" r="198" fill="#1e4133" stroke="#496e54"/><circle cx="313" cy="225" r="153" fill="none" stroke="#54795c" stroke-dasharray="5 8"/>
+<path d="M308 346Q224 282 120 300V142Q228 120 308 187Q390 120 494 142V300Q390 282 308 346Z" fill="#dce9c9" stroke="#a8d19d" stroke-width="6"/>
+<path d="M308 187V346M154 185Q226 169 278 211M154 226Q226 210 278 252M338 211Q390 169 460 185M338 252Q390 210 460 226" fill="none" stroke="#579578" stroke-width="6" stroke-linecap="round"/>
+<path d="M121 143L77 91M494 142L537 92M308 346V399" fill="none" stroke="#a8d19d" stroke-width="3"/>
+<g fill="#b8dda9" stroke="#102922" stroke-width="5"><circle cx="77" cy="91" r="19"/><circle cx="537" cy="92" r="19"/><circle cx="308" cy="399" r="19"/></g></svg>
+<div class="cover-copy"><div class="tag">开源 AI 技术实践 · 期末汇报 · 路径 A</div><h1>青禾</h1><p class="lead">图书馆学习空间助手</p><p>从一句学习需求，到一条有出处的场地建议。</p><p class="dim" id="identity">吴君竹 · f25011313　　雷施佳 · f25011506</p></div></article>
 <article><div class="tag">01 / 用户与问题</div><h2>四个人讨论，该去哪儿？</h2><p class="lead">学生通常要分别核对场地容量、能否讨论和预约规则。</p><div class="rows"><p><b>输入</b>　人数 + 用途；也可单问预约或开放时间。</p><p><b>输出</b>　推荐地点、预约条件、资料编号。</p><p><b>边界</b>　校园场景原型；场地与规则均为模拟数据。</p></div></article>
-<article><div class="tag">02 / 系统架构</div><h2>模型选工具，程序查资料</h2><div class="flow">用户 → 本地 Web → Python Agent → 模型 API</div><div class="flow">模型发出工具调用 → Python 校验并执行 → 结果回传模型</div><p>工具只读本地 JSON 和固定 Skill 文件；页面同时显示建议和执行记录。</p><p class="dim">离线演练沿用同一工具层，用确定规则编排。</p></article>
+<article><div class="tag">02 / 系统架构</div><h2>模型选工具，程序查资料</h2><svg class="diagram" viewBox="0 0 1080 245" role="img" aria-label="用户通过 Web 发起请求，Agent 与模型双向通信，并调用本地工具">
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#347258"/></marker></defs>
+<g fill="#deebdc" stroke="#6f9a80"><rect x="4" y="28" width="160" height="72" rx="10"/><rect x="226" y="28" width="188" height="72" rx="10"/><rect x="748" y="28" width="320" height="72" rx="10"/><rect x="226" y="161" width="188" height="72" rx="10"/><rect x="476" y="161" width="285" height="72" rx="10"/></g>
+<rect x="476" y="28" width="210" height="72" rx="10" fill="#175940"/>
+<g fill="none" stroke="#347258" stroke-width="3" marker-end="url(#arrow)"><path d="M165 64H218"/><path d="M415 64H468"/><path d="M688 49H740"/><path d="M747 79H696"/><path d="M581 101V152"/><path d="M475 197H423"/></g>
+<g text-anchor="middle" fill="#18342b" font-size="25" font-weight="bold"><text x="84" y="73">学生</text><text x="320" y="73">本地 Web</text><text x="581" y="73" fill="#fff">Python Agent</text><text x="908" y="73">模型 API</text><text x="320" y="207">JSON / Skill</text><text x="618" y="207">校验并执行工具</text></g>
+</svg><p>工具只读本地 JSON 和固定 Skill 文件；页面同时显示建议和执行记录。</p><p class="dim">离线演练沿用同一工具层，用确定规则编排。</p></article>
 <article><div class="tag">03 / 工具与技能</div><h2>三次调用，各有分工</h2><div class="rows"><p><b>加载技能</b>　<code>load_skill</code>：取回推荐步骤与输出规则。</p><p><b>筛选地点</b>　<code>search_spaces</code>：按容量和讨论需求筛选。</p><p><b>核对规则</b>　<code>lookup_policy</code>：返回预约或开放规则及 ID。</p></div><p>示例：4 人讨论 → 青禾研讨室 / S01 → 预约规则 / P01。</p></article>
 <article><div class="tag">04 / 关键实现与课程实践</div><h2>把模型和工具串成闭环</h2><div class="rows"><p><b>模型接口</b>　OpenAI 兼容 Chat Completions；传入工具参数定义。</p><p><b>调用循环</b>　读取 <code>tool_calls</code>，执行后用调用 ID 回传结果。</p><p><b>相对 demo_5</b>　延续 Agent、Skill、WebUI 的思路，加入场地筛选、来源编号和可展开的调用记录。</p></div></article>
 <article><div class="tag">05 / 稳定性与合规</div><h2>没有依据时，明确说没有</h2><div class="rows"><p><b>缺条件</b>　追问人数和用途；无匹配时建议拆组。</p><p><b>工具边界</b>　限定工具名、参数类型、枚举与人数；最多六轮模型请求。</p><p><b>数据边界</b>　模拟资料、只读、不收集个人信息；密钥仅在服务端配置。</p><p><b>现场备用</b>　接口失败可切离线演练，页面标明规则驱动。</p></div></article>
-<article><div class="tag">06 / 现场演示</div><h2>看一次推荐，再看一次失败</h2><div class="rows"><p><b>正常请求</b>　“4 人讨论，需要预约吗？” 展开三步工具记录。</p><p><b>无匹配</b>　“12 人小组讨论，有合适地点吗？” 查看空结果。</p><p><b>缺条件</b>　“想找个学习空间。” 展示追问。</p></div><p><a href="http://127.0.0.1:8765/" target="_blank" rel="noopener">打开现场 Demo ↗</a></p></article>
+<article><div class="tag">06 / 现场演示</div><h2>从需求到推荐</h2><div class="demo-grid"><div class="rows"><p><b>正常请求</b>　“4 人讨论，需要预约吗？” 展开三步工具记录。</p><p><b>无匹配</b>　“12 人小组讨论，有合适地点吗？” 查看空结果。</p><p><b>缺条件</b>　“想找个学习空间。” 展示追问。</p></div><p><a href="http://127.0.0.1:8765/" target="_blank" rel="noopener">打开现场 Demo ↗</a></p></div>
+<figure class="sample" aria-label="离线演练结果摘录"><strong>离线演练 · 结果摘录</strong><p>4 人讨论，需要预约吗？</p><p><strong>青禾研讨室</strong> · 三楼东区 · 容量 6 人<br>研讨室需提前登记 <small>资料编号 S01 / P01 · 模拟数据</small></p><small>① 加载推荐 Skill<br>② 筛选场地　seats = 4<br>③ 查询预约规则　topic = booking</small></figure></div></article>
 <article><div class="tag">07 / 复盘与改进</div><h2>目前回答“适不适合”</h2><p class="lead">真实的“有没有空”还需要图书馆授权接口。</p><div class="rows"><p><b>下一步</b>　接入只读空位 API，并记录查询时间。</p><p><b>评估</b>　用固定问例检查筛选正确性、来源一致性和失败提示。</p><p><b>复现</b>　代码、样例数据、Skill、启动说明与演示用例随仓库交付。</p></div></article>
 <nav><span id="page"></span><button id="prev">← 上一页</button><button id="next">下一页 →</button><button id="full">全屏</button></nav>
 <script>
