@@ -282,9 +282,11 @@ async function searchCatalog(){
   const response=await fetch('/catalog?'+query);
   if(!response.ok)throw Error('馆藏暂不可用。');
   const {items,topics}=await response.json();target.replaceChildren();
-  const select=el('book-topic'), previous=select.value;
-  select.replaceChildren(...['全部',...topics].map(topic=>new Option(topic,topic)));
-  select.value=previous;
+  if(Array.isArray(topics)){
+   const select=el('book-topic'), previous=select.value;
+   select.replaceChildren(...['全部',...topics].map(topic=>new Option(topic,topic)));
+   select.value=topics.includes(previous)?previous:'全部';
+  }
   el('catalog-status').textContent='找到 '+items.length+' 本样例书籍';
   if(!items.length)target.textContent='未找到匹配资料，试试缩短关键词或切换主题。';
   for(const b of items)row(target,b.title+' · '+b.id,b.author+' · '+b.shelf+' · '+b.status+'。'+b.note,'收藏',()=>{
