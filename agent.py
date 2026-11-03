@@ -3,7 +3,7 @@ import json
 import os
 import re
 from planner import available, schedule, today
-from library import catalog, study_plan
+from library import TOPICS, catalog, study_plan
 import urllib.request
 from datetime import date, timedelta
 from pathlib import Path
@@ -32,7 +32,7 @@ def search_equipment(equipment):
 
 REGISTRY = {
     "search_catalog": (catalog, "按关键词和主题检索模拟馆藏，返回资料编号与索书位置", {
-        "query": {"type": "string"}, "topic": {"type": "string", "enum": ["全部", "编程", "人工智能", "信息素养", "学习方法"]}}),
+        "query": {"type": "string"}, "topic": {"type": "string", "enum": ["全部", *TOPICS]}}),
     "make_study_plan": (study_plan, "按主题与可用分钟数生成学习清单", {
         "topic": {"type": "string"}, "minutes": {"type": "integer"}}),
     "search_equipment": (search_equipment, "按设备查询学习空间及来源编号", {

@@ -3,7 +3,7 @@ import argparse
 import json
 import os
 import re
-from library import catalog, study_plan
+from library import TOPICS, catalog, study_plan
 from planner import (DATA, available, bookings, cancel, check_in, history,
                      join_waiting, queue, release, reserve, reschedule, schedule, withdraw)
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -37,7 +37,7 @@ class Handler(BaseHTTPRequestHandler):
         url = urlsplit(self.path)
         if url.path == "/catalog":
             query = parse_qs(url.query)
-            return self.reply(200, {"items": catalog(query.get("q", [""])[0], query.get("topic", ["全部"])[0])})
+            return self.reply(200, {"topics": TOPICS, "items": catalog(query.get("q", [""])[0], query.get("topic", ["全部"])[0])})
         if url.path == "/schedule":
             try:
                 return self.reply(200, schedule(parse_qs(url.query).get("day", [None])[0]))
@@ -88,7 +88,8 @@ class Handler(BaseHTTPRequestHandler):
             if not re.fullmatch(r"[a-f0-9-]{36}", session):
                 raise ValueError("会话无效，请刷新网页。")
             if self.path == "/study-plan":
-                return self.reply(200, study_plan(body["topic"], body["minutes"]))
+                return self.reply(200, study_plan(body["topic"], body["minutes"], body.get("goal", "reading"),
+                                                 body.get("level", "beginner"), body.get("focus", ""), body.get("sessions", 1)))
             if self.path == "/bookings":
                 result = bookings(session)
             elif self.path == "/queue":
