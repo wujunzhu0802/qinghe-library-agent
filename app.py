@@ -3,10 +3,12 @@ import argparse
 import json
 import os
 import re
+from library import catalog, study_plan
 from planner import (DATA, available, bookings, cancel, check_in, history,
                      join_waiting, queue, release, reserve, reschedule, schedule, withdraw)
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.error import URLError
+from urllib.parse import parse_qs, urlsplit
 
 from agent import ROOT, offline, online
 
@@ -32,8 +34,15 @@ class Handler(BaseHTTPRequestHandler):
         self.send(code, json.dumps(data, ensure_ascii=False).encode())
 
     def do_GET(self):
-        if self.path == "/schedule":
-            return self.reply(200, schedule())
+        url = urlsplit(self.path)
+        if url.path == "/catalog":
+            query = parse_qs(url.query)
+            return self.reply(200, {"items": catalog(query.get("q", [""])[0], query.get("topic", ["全部"])[0])})
+        if url.path == "/schedule":
+            try:
+                return self.reply(200, schedule(parse_qs(url.query).get("day", [None])[0]))
+            except ValueError as error:
+                return self.reply(400, {"error": str(error)})
         if self.path == "/policies":
             return self.reply(200, DATA["policies"])
         if self.path == "/":
@@ -42,7 +51,7 @@ class Handler(BaseHTTPRequestHandler):
             self.reply(404, {"error": "页面不存在"})
 
     def do_POST(self):
-        if self.path in ("/plan", "/book", "/bookings", "/cancel", "/reschedule", "/queue", "/wait", "/withdraw", "/history", "/checkin", "/checkout"):
+        if self.path in ("/plan", "/book", "/bookings", "/cancel", "/reschedule", "/queue", "/wait", "/withdraw", "/history", "/checkin", "/checkout", "/study-plan"):
             return self.planner_request()
         if self.path != "/ask":
             return self.reply(404, {"error": "接口不存在"})
@@ -78,6 +87,8 @@ class Handler(BaseHTTPRequestHandler):
             session = body.get("session", "")
             if not re.fullmatch(r"[a-f0-9-]{36}", session):
                 raise ValueError("会话无效，请刷新网页。")
+            if self.path == "/study-plan":
+                return self.reply(200, study_plan(body["topic"], body["minutes"]))
             if self.path == "/bookings":
                 result = bookings(session)
             elif self.path == "/queue":
@@ -91,15 +102,15 @@ class Handler(BaseHTTPRequestHandler):
             elif self.path == "/withdraw":
                 result = withdraw(session, body["id"])
             elif self.path == "/wait":
-                result = join_waiting(session, body["space"], body["slot"], body["seats"], body["discussion"])
+                result = join_waiting(session, body["space"], body["slot"], body["seats"], body["discussion"], body.get("day"))
             elif self.path == "/reschedule":
-                result = reschedule(session, body["id"], body["slot"])
+                result = reschedule(session, body["id"], body["slot"], body.get("day"))
             elif self.path == "/cancel":
                 result = cancel(session, body["id"])
             else:
-                args = [body["seats"], body["discussion"], body["slot"]]
+                args = [body["seats"], body["discussion"], body["slot"], body.get("day")]
                 result = available(*args) if self.path == "/plan" else reserve(
-                    session, body["space"], args[2], args[0], args[1])
+                    session, body["space"], args[2], args[0], args[1], args[3])
             self.reply(200, {"items": result})
         except (ValueError, KeyError, TypeError, AttributeError) as exc:
             self.reply(400, {"error": str(exc) if isinstance(exc, ValueError) else "请求格式错误。"})

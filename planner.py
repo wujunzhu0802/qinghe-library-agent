@@ -2,7 +2,7 @@
 import json
 import sqlite3
 from contextlib import closing, contextmanager
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from uuid import uuid4
 
@@ -11,6 +11,26 @@ DATA = json.loads((ROOT / "data.json").read_text(encoding="utf-8"))
 SLOTS = ("09:00", "14:00", "19:00")
 BLOCKED = {("S01", "14:00"), ("S02", "09:00")}
 DB = ROOT / "reservations.sqlite3"
+SHANGHAI = timezone(timedelta(hours=8))
+
+
+def today():
+    return datetime.now(SHANGHAI).date().isoformat()
+
+
+def date_value(day=None):
+    day = today() if day is None else day
+    try:
+        if date.fromisoformat(day).isoformat() != day:
+            raise ValueError()
+    except (TypeError, ValueError):
+        raise ValueError("请选择有效日期。") from None
+    return day
+
+
+def period(day, slot):
+    return f"{date_value(day)} {slot}"
+
 
 
 @contextmanager
@@ -27,20 +47,30 @@ def connect():
         con.execute("""CREATE TABLE IF NOT EXISTS activity (
             seq INTEGER PRIMARY KEY AUTOINCREMENT, session TEXT NOT NULL,
             kind TEXT NOT NULL, space TEXT NOT NULL, slot TEXT NOT NULL, at TEXT NOT NULL)""")
+        if con.execute("PRAGMA user_version").fetchone()[0] < 1:
+            con.execute("BEGIN IMMEDIATE")
+            if con.execute("PRAGMA user_version").fetchone()[0] < 1:
+                for table in ("reservations", "waiting", "activity"):
+                    con.execute(f"UPDATE {table} SET slot=? || ' ' || slot WHERE length(slot)=5", (today(),))
+                con.execute("PRAGMA user_version=1")
+            con.commit()
         yield con
 
 
-def available(seats, discussion, slot):
+def available(seats, discussion, slot, day=None):
     if type(seats) is not int or not 1 <= seats <= 99 or type(discussion) is not bool or slot not in SLOTS:
         raise ValueError("请选择有效的人数、用途和时段。")
+    key = period(day, slot)
     with connect() as con:
         taken = set(con.execute("SELECT space, slot FROM reservations"))
-    return [dict(s, available=(s["id"], slot) not in BLOCKED | taken, waitlist=(s["id"], slot) in taken, slot=slot)
+    return [dict(s, available=(s["id"], slot) not in BLOCKED and (s["id"], key) not in taken,
+                 waitlist=(s["id"], key) in taken, day=key[:10], slot=slot)
             for s in DATA["spaces"] if s["seats"] >= seats and s["discussion"] == discussion]
 
 
-def reserve(session, space, slot, seats, discussion):
-    choices = available(seats, discussion, slot)
+def reserve(session, space, slot, seats, discussion, day=None):
+    choices = available(seats, discussion, slot, day)
+    slot = period(day, slot)
     if not any(s["id"] == space and s["available"] for s in choices):
         raise ValueError("该场地已占用或不符合条件，请重新查询。")
     ref = uuid4().hex
@@ -58,7 +88,7 @@ def bookings(session):
         rows = con.execute("""SELECT r.id, r.space, r.slot, r.seats, c.id IS NOT NULL
             FROM reservations r LEFT JOIN checkins c ON c.id=r.id WHERE r.session=? ORDER BY r.slot""", (session,))
         names = {s["id"]: s["name"] for s in DATA["spaces"]}
-        return [dict(id=ref, space=names[space], slot=slot, seats=seats, checked_in=bool(checked)) for ref, space, slot, seats, checked in rows]
+        return [dict(id=ref, space=names[space], day=slot[:10], slot=slot[11:], seats=seats, checked_in=bool(checked)) for ref, space, slot, seats, checked in rows]
 
 
 def cancel(session, ref):
@@ -79,18 +109,20 @@ def release(session, ref, checked_out):
     return bookings(session)
 
 
-def schedule():
+def schedule(day=None):
+    day = date_value(day)
     with connect() as con:
-        occupied = BLOCKED | set(con.execute("SELECT space, slot FROM reservations"))
-    return {"slots": SLOTS, "spaces": [
-        dict(space, free={slot: (space["id"], slot) not in occupied for slot in SLOTS})
+        occupied = set(con.execute("SELECT space, slot FROM reservations"))
+    return {"day": day, "slots": SLOTS, "spaces": [
+        dict(space, free={slot: (space["id"], slot) not in BLOCKED and (space["id"], period(day, slot)) not in occupied for slot in SLOTS})
         for space in DATA["spaces"]
     ]}
 
 
-def reschedule(session, ref, slot):
+def reschedule(session, ref, slot, day=None):
     if slot not in SLOTS:
         raise ValueError("请选择有效时段。")
+    slot = period(day, slot)
     try:
         with connect() as con:
             con.execute("BEGIN IMMEDIATE")
@@ -99,7 +131,7 @@ def reschedule(session, ref, slot):
                 raise ValueError("已签到的预约不能改期。")
             if slot == old_slot:
                 raise ValueError("请选择不同的时段。")
-            if (space, slot) in BLOCKED:
+            if (space, slot[11:]) in BLOCKED:
                 raise ValueError("目标时段已占用，原预约已保留。")
             con.execute("UPDATE reservations SET slot=? WHERE id=? AND session=?", (slot, ref, session))
             con.execute("DELETE FROM waiting WHERE session=? AND space=? AND slot=?", (session, space, slot))
@@ -133,10 +165,11 @@ def promote(con, space, slot):
         log(con, session, "候补转正", space, slot)
 
 
-def join_waiting(session, space, slot, seats, discussion):
-    options = available(seats, discussion, slot)
+def join_waiting(session, space, slot, seats, discussion, day=None):
+    options = available(seats, discussion, slot, day)
     if not any(s["id"] == space for s in options) or (space, slot) in BLOCKED:
         raise ValueError("该场地或时段不开放候补。")
+    slot = period(day, slot)
     with connect() as con:
         con.execute("BEGIN IMMEDIATE")
         owner = con.execute("SELECT session FROM reservations WHERE space=? AND slot=?", (space, slot)).fetchone()
@@ -156,7 +189,7 @@ def queue(session):
         rows = con.execute("""SELECT w.seq,w.space,w.slot,
             (SELECT COUNT(*) FROM waiting ahead WHERE ahead.space=w.space AND ahead.slot=w.slot AND ahead.seq<=w.seq)
             FROM waiting w WHERE session=? ORDER BY w.seq""", (session,))
-        return [dict(id=seq, space=names(space), slot=slot, position=position)
+        return [dict(id=seq, space=names(space), day=slot[:10], slot=slot[11:], position=position)
                 for seq, space, slot, position in rows]
 
 
@@ -188,4 +221,4 @@ def history(session):
     with connect() as con:
         rows = con.execute("""SELECT kind,space,slot,at FROM activity WHERE session=?
             ORDER BY seq DESC LIMIT 60""", (session,))
-        return [dict(kind=kind, space=names(space), slot=slot, at=at) for kind, space, slot, at in rows]
+        return [dict(kind=kind, space=names(space), day=slot[:10], slot=slot[11:], at=at) for kind, space, slot, at in rows]

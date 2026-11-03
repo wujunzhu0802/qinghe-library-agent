@@ -10,11 +10,13 @@
 - **我的预约**。支持刷新后查看、改期、取消和 CSV 导出。目标时段已占用时，原预约保留。已被其他会话预约的时段可排队，空位释放后按顺序自动转正。也可模拟签到、结束使用和退出候补。
 - **使用记录**。查看预约、改期、取消、候补转正、签到和结束使用的时间线。
 - **设备和占用查询**。问“哪些场地有投影”或“哪个时段最空”，可查阅工具结果。总览统计演示日时段占用率。
+- **馆藏检索与阅读清单**。按关键词或主题浏览样例资料、架位和状态，收藏保存在当前浏览器。
+- **学习计划**。输入主题和时间生成分段任务，并查找相关样例馆藏。
 - **使用规则**。独立浏览开放时间和预约规则，可用资料编号和问答结果相互核对。
 
-演示日有 09:00、14:00、19:00 三个一小时时段。数据为本机模拟，预约存入被 Git 忽略的 SQLite 文件。汇报材料作为独立文件打开。
+支持按日期查看与预约 09:00–10:00、14:00–15:00、19:00–20:00。改期可同时更改日期和时段，候补按同一天、同一场地和时段排队。旧版无日期的记录首次启动会归到迁移当天（上海时间）。数据为本机模拟，预约存入被 Git 忽略的 SQLite 文件。汇报材料作为独立文件打开。
 
-场地日程与资源筛选参考 [Booked Scheduler](https://github.com/JohanManders/BookedScheduler)，预约管理的设计参考 [Cal.diy 功能文档](https://github.com/calcom/cal.diy/blob/main/apps/docs/content/index.mdx)。候补、签到和操作记录参考 [LibreBooking](https://github.com/LibreBooking/librebooking/blob/develop/docs/source/INSTALLATION.rst) 与 [Resource Reserver](https://github.com/sylvester-francis/Resource-Reserver)。本项目自行实现这些交互。
+场地日程与资源筛选参考 [Booked Scheduler](https://github.com/JohanManders/BookedScheduler)，预约管理的设计参考 [Cal.diy 功能文档](https://github.com/calcom/cal.diy/blob/main/apps/docs/content/index.mdx)。候补、签到和操作记录参考 [LibreBooking](https://github.com/LibreBooking/librebooking/blob/develop/docs/source/INSTALLATION.rst) 与 [Resource Reserver](https://github.com/sylvester-francis/Resource-Reserver)。馆藏的关键词检索、架位与状态展示参考 [Open Library](https://github.com/internetarchive/openlibrary) 和 [Koha](https://github.com/Koha-Community/kohadocs/blob/master/source/circulation.rst)。本项目自行实现交互，馆藏和场地均为本地样例。
 
 ## 在 Windows 复现
 
