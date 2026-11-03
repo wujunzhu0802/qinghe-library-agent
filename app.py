@@ -3,7 +3,8 @@ import argparse
 import json
 import os
 import re
-from planner import DATA, available, bookings, cancel, reserve, reschedule, schedule
+from planner import (DATA, available, bookings, cancel, check_in, history,
+                     join_waiting, queue, release, reserve, reschedule, schedule, withdraw)
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.error import URLError
 
@@ -41,7 +42,7 @@ class Handler(BaseHTTPRequestHandler):
             self.reply(404, {"error": "页面不存在"})
 
     def do_POST(self):
-        if self.path in ("/plan", "/book", "/bookings", "/cancel", "/reschedule"):
+        if self.path in ("/plan", "/book", "/bookings", "/cancel", "/reschedule", "/queue", "/wait", "/withdraw", "/history", "/checkin", "/checkout"):
             return self.planner_request()
         if self.path != "/ask":
             return self.reply(404, {"error": "接口不存在"})
@@ -79,6 +80,18 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError("会话无效，请刷新网页。")
             if self.path == "/bookings":
                 result = bookings(session)
+            elif self.path == "/queue":
+                result = queue(session)
+            elif self.path == "/history":
+                result = history(session)
+            elif self.path == "/checkin":
+                result = check_in(session, body["id"])
+            elif self.path == "/checkout":
+                result = release(session, body["id"], True)
+            elif self.path == "/withdraw":
+                result = withdraw(session, body["id"])
+            elif self.path == "/wait":
+                result = join_waiting(session, body["space"], body["slot"], body["seats"], body["discussion"])
             elif self.path == "/reschedule":
                 result = reschedule(session, body["id"], body["slot"])
             elif self.path == "/cancel":

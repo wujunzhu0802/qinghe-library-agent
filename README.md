@@ -7,12 +7,14 @@
 - **时段总览**。查看场地、可约时段和当前浏览器的预约数量。日程支持按用途筛选、仅看有空位，点击可约格子会进入场地筛选。
 - **查找场地**。按人数、用途、时段比较容量和位置，确认模拟预约。当前时段满位时可跳到推荐时段。
 - **智能问答**。先问“想找个学习空间”，再补充“4 人下午讨论”，即可查看时段空位和工具记录。
-- **我的预约**。支持刷新后查看、改期、取消和 CSV 导出。目标时段已占用时，原预约保留。
+- **我的预约**。支持刷新后查看、改期、取消和 CSV 导出。目标时段已占用时，原预约保留。已被其他会话预约的时段可排队，空位释放后按顺序自动转正。也可模拟签到、结束使用和退出候补。
+- **使用记录**。查看预约、改期、取消、候补转正、签到和结束使用的时间线。
+- **设备和占用查询**。问“哪些场地有投影”或“哪个时段最空”，可查阅工具结果。总览统计演示日时段占用率。
 - **使用规则**。独立浏览开放时间和预约规则，可用资料编号和问答结果相互核对。
 
 演示日有 09:00、14:00、19:00 三个一小时时段。数据为本机模拟，预约存入被 Git 忽略的 SQLite 文件。汇报材料作为独立文件打开。
 
-场地日程与资源筛选参考 [Booked Scheduler](https://github.com/JohanManders/BookedScheduler)，预约管理的设计参考 [Cal.diy 功能文档](https://github.com/calcom/cal.diy/blob/main/apps/docs/content/index.mdx)。本项目自行实现这些交互。
+场地日程与资源筛选参考 [Booked Scheduler](https://github.com/JohanManders/BookedScheduler)，预约管理的设计参考 [Cal.diy 功能文档](https://github.com/calcom/cal.diy/blob/main/apps/docs/content/index.mdx)。候补、签到和操作记录参考 [LibreBooking](https://github.com/LibreBooking/librebooking/blob/develop/docs/source/INSTALLATION.rst) 与 [Resource Reserver](https://github.com/sylvester-francis/Resource-Reserver)。本项目自行实现这些交互。
 
 ## 在 Windows 复现
 
