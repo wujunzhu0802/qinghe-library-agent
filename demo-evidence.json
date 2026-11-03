@@ -1,0 +1,144 @@
+[
+  {
+    "question": "4 人讨论，需要预约吗？",
+    "answer": "建议：青禾研讨室（6 人，三楼东区）。\n预约：研讨室需在模拟预约入口提前登记，静读区无需预约。\n来源：S01、P01（模拟资料，不代表实时空位）。",
+    "trace": [
+      {
+        "工具": "load_skill",
+        "参数": {
+          "name": "study-space-plan"
+        },
+        "返回": "---\nname: study-space-plan\ndescription: 当用户要求推荐学习地点时，按人数、用途和场地规则给出可核对的建议。\n---\n\n1. 确定人数和用途；缺任一信息就追问。讨论用 discussion=true；安静自习用 false。\n2. 使用 search_spaces 筛选。无匹配时说明原因，建议拆分小组或调整用途。\n3. 使用 lookup_policy 查询 booking；需要开放时间时另查 hours。\n4. 按“建议 → 预约 → 来源”输出，引用空间和规则 ID。注明为模拟数据，不声称有实时空位或已预约。\n"
+      },
+      {
+        "工具": "search_spaces",
+        "参数": {
+          "seats": 4,
+          "discussion": true
+        },
+        "返回": [
+          {
+            "id": "S01",
+            "name": "青禾研讨室",
+            "seats": 6,
+            "discussion": true,
+            "location": "三楼东区"
+          },
+          {
+            "id": "S02",
+            "name": "松风研讨室",
+            "seats": 10,
+            "discussion": true,
+            "location": "四楼西区"
+          }
+        ]
+      },
+      {
+        "工具": "lookup_policy",
+        "参数": {
+          "topic": "booking"
+        },
+        "返回": {
+          "id": "P01",
+          "text": "研讨室需在模拟预约入口提前登记，静读区无需预约。"
+        }
+      }
+    ],
+    "mode": "offline"
+  },
+  {
+    "question": "2 人安静自习",
+    "answer": "建议：静读区（4 人，二楼南区）。\n预约：研讨室需在模拟预约入口提前登记，静读区无需预约。\n来源：S03、P01（模拟资料，不代表实时空位）。",
+    "trace": [
+      {
+        "工具": "load_skill",
+        "参数": {
+          "name": "study-space-plan"
+        },
+        "返回": "---\nname: study-space-plan\ndescription: 当用户要求推荐学习地点时，按人数、用途和场地规则给出可核对的建议。\n---\n\n1. 确定人数和用途；缺任一信息就追问。讨论用 discussion=true；安静自习用 false。\n2. 使用 search_spaces 筛选。无匹配时说明原因，建议拆分小组或调整用途。\n3. 使用 lookup_policy 查询 booking；需要开放时间时另查 hours。\n4. 按“建议 → 预约 → 来源”输出，引用空间和规则 ID。注明为模拟数据，不声称有实时空位或已预约。\n"
+      },
+      {
+        "工具": "search_spaces",
+        "参数": {
+          "seats": 2,
+          "discussion": false
+        },
+        "返回": [
+          {
+            "id": "S03",
+            "name": "静读区",
+            "seats": 4,
+            "discussion": false,
+            "location": "二楼南区"
+          }
+        ]
+      },
+      {
+        "工具": "lookup_policy",
+        "参数": {
+          "topic": "booking"
+        },
+        "返回": {
+          "id": "P01",
+          "text": "研讨室需在模拟预约入口提前登记，静读区无需预约。"
+        }
+      }
+    ],
+    "mode": "offline"
+  },
+  {
+    "question": "12 人讨论",
+    "answer": "样例空间中没有满足条件的地点。可以尝试拆分小组或调整讨论需求。",
+    "trace": [
+      {
+        "工具": "load_skill",
+        "参数": {
+          "name": "study-space-plan"
+        },
+        "返回": "---\nname: study-space-plan\ndescription: 当用户要求推荐学习地点时，按人数、用途和场地规则给出可核对的建议。\n---\n\n1. 确定人数和用途；缺任一信息就追问。讨论用 discussion=true；安静自习用 false。\n2. 使用 search_spaces 筛选。无匹配时说明原因，建议拆分小组或调整用途。\n3. 使用 lookup_policy 查询 booking；需要开放时间时另查 hours。\n4. 按“建议 → 预约 → 来源”输出，引用空间和规则 ID。注明为模拟数据，不声称有实时空位或已预约。\n"
+      },
+      {
+        "工具": "search_spaces",
+        "参数": {
+          "seats": 12,
+          "discussion": true
+        },
+        "返回": []
+      },
+      {
+        "工具": "lookup_policy",
+        "参数": {
+          "topic": "booking"
+        },
+        "返回": {
+          "id": "P01",
+          "text": "研讨室需在模拟预约入口提前登记，静读区无需预约。"
+        }
+      }
+    ],
+    "mode": "offline"
+  },
+  {
+    "question": "几点开放",
+    "answer": "样例开放时间为周一至周日 08:00–22:00，节假日安排未收录。\n来源：P02（模拟资料）。",
+    "trace": [
+      {
+        "工具": "lookup_policy",
+        "参数": {
+          "topic": "hours"
+        },
+        "返回": {
+          "id": "P02",
+          "text": "样例开放时间为周一至周日 08:00–22:00，节假日安排未收录。"
+        }
+      }
+    ],
+    "mode": "offline"
+  },
+  {
+    "question": "想找个学习空间",
+    "answer": "请提供人数（如 4 人）和用途（讨论或安静自习），也可询问开放时间或预约规则。",
+    "trace": [],
+    "mode": "offline"
+  }
+]

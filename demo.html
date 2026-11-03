@@ -1,0 +1,27 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>青禾 · 图书馆空间助手</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f5ed;color:#142d26;font:17px/1.6 "Microsoft YaHei",sans-serif}main{max-width:1040px;margin:auto;padding:40px 24px}h1{font-size:clamp(28px,5vw,52px);line-height:1.15;margin:12px 0}small{color:#34594e}section{background:white;border:1px solid #dce6da;padding:22px;margin-top:18px;border-radius:14px}textarea,button,select{font:inherit}textarea{width:100%;min-height:94px;padding:12px;border:1px solid #8eaaa0;border-radius:8px;margin:8px 0}button,select{border:1px solid #55796e;border-radius:7px;padding:7px 12px;margin:3px 4px 3px 0;background:#f1f7ef;color:#142d26;cursor:pointer}button[type=submit]{background:#155843;color:white}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}#answer{white-space:pre-wrap}a{color:#155843}summary{cursor:pointer}
+</style><main><small>开源 AI 技术实践 / 路径 A</small><h1>青禾 · 图书馆空间助手</h1>
+<p>输入人数和用途，查找合适的学习空间和预约规则。全部场地与规则为模拟资料。 <a href="/slides" target="_blank">打开汇报幻灯片</a></p>
+<section><form id="form"><label for="q">你的学习需求</label><textarea id="q" maxlength="600" required placeholder="例如：我们 4 人想讨论课程项目，去哪儿？"></textarea>
+<div id="examples"></div><label for="mode">运行模式 </label><select id="mode"><option value="offline">离线演练（规则驱动）</option><option value="online">在线智能体（模型驱动）</option></select>
+<button type="submit" id="run">查找空间</button></form></section>
+<section><strong>建议与依据</strong><p id="answer" role="status">等待输入。</p><details open><summary>工具调用记录 <span id="count"></span></summary><div id="trace"></div></details></section>
+</main><script>
+const el=id=>document.getElementById(id);
+for(const q of ['4 人讨论，需要预约吗？','2 人安静自习，有推荐吗？','12 人小组讨论，有合适地点吗？','图书馆几点开放？','想找个学习空间。']){
+ const b=document.createElement('button');b.type='button';b.textContent=q;b.onclick=()=>{el('q').value=q;el('q').focus()};el('examples').append(b);
+}
+el('form').onsubmit=async e=>{
+ e.preventDefault();el('run').disabled=true;el('answer').textContent='正在处理…';el('trace').replaceChildren();el('count').textContent='';
+ try{
+  const r=await fetch('/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:el('q').value,mode:el('mode').value})});
+  const d=await r.json();el('answer').textContent=d.error||d.answer;el('count').textContent='（'+(d.trace||[]).length+' 次'+(d.mode==='offline'?' · 规则驱动':d.mode==='online'?' · 模型驱动':'')+'）';
+  for(const [i,t] of (d.trace||[]).entries()){
+   const row=document.createElement('details'), title=document.createElement('summary'),pre=document.createElement('pre');
+   title.textContent=(i+1)+'. '+t['工具'];pre.textContent=JSON.stringify(t,null,2);row.append(title,pre);el('trace').append(row);
+  }
+ }catch{el('answer').textContent='无法连接本地服务，请确认 python app.py 正在运行。'}finally{el('run').disabled=false}
+};
+</script></html>

@@ -1,0 +1,11 @@
+{
+  "spaces": [
+    {"id":"S01","name":"青禾研讨室","seats":6,"discussion":true,"location":"三楼东区"},
+    {"id":"S02","name":"松风研讨室","seats":10,"discussion":true,"location":"四楼西区"},
+    {"id":"S03","name":"静读区","seats":4,"discussion":false,"location":"二楼南区"}
+  ],
+  "policies": {
+    "booking":{"id":"P01","text":"研讨室需在模拟预约入口提前登记，静读区无需预约。"},
+    "hours":{"id":"P02","text":"样例开放时间为周一至周日 08:00–22:00，节假日安排未收录。"}
+  }
+}
