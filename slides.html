@@ -16,20 +16,24 @@
 <path d="M121 143L77 91M494 142L537 92M308 346V399" fill="none" stroke="#a8d19d" stroke-width="3"/>
 <g fill="#b8dda9" stroke="#102922" stroke-width="5"><circle cx="77" cy="91" r="19"/><circle cx="537" cy="92" r="19"/><circle cx="308" cy="399" r="19"/></g></svg>
 <div class="cover-copy"><div class="tag">开源 AI 技术实践 · 期末汇报 · 路径 A</div><h1>青禾</h1><p class="lead">图书馆学习空间助手</p><p>从一句学习需求，到一条有出处的场地建议。</p><p class="dim" id="identity">吴君竹 · f25011313　　雷施佳 · f25011506</p></div></article>
-<article><div class="tag">01 / 用户与问题</div><h2>四个人讨论，该去哪儿？</h2><p class="lead">学生通常要分别核对场地容量、能否讨论和预约规则。</p><div class="rows"><p><b>输入</b>　人数 + 用途；也可单问预约或开放时间。</p><p><b>输出</b>　推荐地点、预约条件、资料编号。</p><p><b>边界</b>　校园场景原型；场地与规则均为模拟数据。</p></div></article>
+<article><div class="tag">01 / 用户与问题</div><h2>四个人讨论，该去哪儿？</h2><p class="lead">学生通常要分别核对场地容量、能否讨论和预约规则。</p><div class="rows"><p><b>输入</b>　人数 + 用途；也可单问预约或开放时间。</p><p><b>输出</b>　对比场地、查时段空位、模拟预约和取消。</p><p><b>边界</b>　校园场景原型；场地与规则均为模拟数据。</p></div></article>
 <article><div class="tag">02 / 系统架构</div><h2>模型选工具，程序查资料</h2><svg class="diagram" viewBox="0 0 1080 245" role="img" aria-label="用户通过 Web 发起请求，Agent 与模型双向通信，并调用本地工具">
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#347258"/></marker></defs>
 <g fill="#deebdc" stroke="#6f9a80"><rect x="4" y="28" width="160" height="72" rx="10"/><rect x="226" y="28" width="188" height="72" rx="10"/><rect x="748" y="28" width="320" height="72" rx="10"/><rect x="226" y="161" width="188" height="72" rx="10"/><rect x="476" y="161" width="285" height="72" rx="10"/></g>
 <rect x="476" y="28" width="210" height="72" rx="10" fill="#175940"/>
 <g fill="none" stroke="#347258" stroke-width="3" marker-end="url(#arrow)"><path d="M165 64H218"/><path d="M415 64H468"/><path d="M688 49H740"/><path d="M747 79H696"/><path d="M581 101V152"/><path d="M475 197H423"/></g>
 <g text-anchor="middle" fill="#18342b" font-size="25" font-weight="bold"><text x="84" y="73">学生</text><text x="320" y="73">本地 Web</text><text x="581" y="73" fill="#fff">Python Agent</text><text x="908" y="73">模型 API</text><text x="320" y="207">JSON / Skill</text><text x="618" y="207">校验并执行工具</text></g>
-</svg><p>工具只读本地 JSON 和固定 Skill 文件；页面同时显示建议和执行记录。</p><p class="dim">离线演练沿用同一工具层，用确定规则编排。</p></article>
-<article><div class="tag">03 / 工具与技能</div><h2>三次调用，各有分工</h2><div class="rows"><p><b>加载技能</b>　<code>load_skill</code>：取回推荐步骤与输出规则。</p><p><b>筛选地点</b>　<code>search_spaces</code>：按容量和讨论需求筛选。</p><p><b>核对规则</b>　<code>lookup_policy</code>：返回预约或开放规则及 ID。</p></div><p>示例：4 人讨论 → 青禾研讨室 / S01 → 预约规则 / P01。</p></article>
+</svg><p>问答工具读取规则、Skill 和时段状态。用户确认预约后，服务端将记录写入本地 SQLite。</p><p class="dim">离线演练沿用同一工具层，用确定规则编排。</p></article>
+<article><div class="tag">03 / 工具与技能</div><h2>四个工具，各有分工</h2><div class="rows"><p><b>加载技能</b>　<code>load_skill</code>：取回推荐步骤与输出规则。</p><p><b>筛选与查空位</b>　<code>search_spaces</code> 按容量筛选，<code>check_availability</code> 查时段状态。</p><p><b>核对规则</b>　<code>lookup_policy</code>：返回预约或开放规则及 ID。</p></div><p>示例：4 人下午讨论 → 青禾研讨室已占用 → 松风研讨室可预约。</p></article>
 <article><div class="tag">04 / 关键实现与课程实践</div><h2>把模型和工具串成闭环</h2><div class="rows"><p><b>模型接口</b>　OpenAI 兼容 Chat Completions；传入工具参数定义。</p><p><b>调用循环</b>　读取 <code>tool_calls</code>，执行后用调用 ID 回传结果。</p><p><b>相对 demo_5</b>　延续 Agent、Skill、WebUI 的思路，加入场地筛选、来源编号和可展开的调用记录。</p></div></article>
-<article><div class="tag">05 / 稳定性与合规</div><h2>没有依据时，明确说没有</h2><div class="rows"><p><b>缺条件</b>　追问人数和用途；无匹配时建议拆组。</p><p><b>工具边界</b>　限定工具名、参数类型、枚举与人数；最多六轮模型请求。</p><p><b>数据边界</b>　模拟资料、只读、不收集个人信息；密钥仅在服务端配置。</p><p><b>现场备用</b>　接口失败可切离线演练，页面标明规则驱动。</p></div></article>
-<article><div class="tag">06 / 现场演示</div><h2>从需求到推荐</h2><div class="demo-grid"><div class="rows"><p><b>正常请求</b>　“4 人讨论，需要预约吗？” 展开三步工具记录。</p><p><b>无匹配</b>　“12 人小组讨论，有合适地点吗？” 查看空结果。</p><p><b>缺条件</b>　“想找个学习空间。” 展示追问。</p></div><p><a href="http://127.0.0.1:8765/" target="_blank" rel="noopener">打开现场 Demo ↗</a></p></div>
-<figure class="sample" aria-label="离线演练结果摘录"><strong>离线演练 · 结果摘录</strong><p>4 人讨论，需要预约吗？</p><p><strong>青禾研讨室</strong> · 三楼东区 · 容量 6 人<br>研讨室需提前登记 <small>资料编号 S01 / P01 · 模拟数据</small></p><small>① 加载推荐 Skill<br>② 筛选场地　seats = 4<br>③ 查询预约规则　topic = booking</small></figure></div></article>
-<article><div class="tag">07 / 复盘与改进</div><h2>目前回答“适不适合”</h2><p class="lead">真实的“有没有空”还需要图书馆授权接口。</p><div class="rows"><p><b>下一步</b>　接入只读空位 API，并记录查询时间。</p><p><b>评估</b>　用固定问例检查筛选正确性、来源一致性和失败提示。</p><p><b>复现</b>　代码、样例数据、Skill、启动说明与演示用例随仓库交付。</p></div></article>
+<article><div class="tag">05 / 稳定性与合规</div><h2>没有依据时，明确说没有</h2><div class="rows"><p><b>缺条件</b>　追问人数和用途；无匹配时建议拆组，时段占满时提供可用备选。</p><p><b>工具边界</b>　限定工具名、参数类型、枚举与人数；最多六轮模型请求。</p><p><b>数据边界</b>　模拟资料、只读、不收集个人信息；密钥仅在服务端配置。</p><p><b>现场备用</b>　接口失败可切离线演练，页面标明规则驱动。</p></div></article>
+<article><div class="tag">06 / 现场演示</div><h2>从需求到预约</h2><div class="demo-grid"><div class="rows">
+<p><b>补充条件</b>　先说“想找个学习空间”，再说“4 人下午讨论”。</p>
+<p><b>比较场地</b>　查 14:00，查看两间研讨室的占用状态。</p>
+<p><b>预约和取消</b>　确认预约，查看备选时段，取消并恢复空位。</p>
+<p><a href="http://127.0.0.1:8765/" target="_blank" rel="noopener">打开现场 Demo ↗</a></p></div>
+<figure class="sample"><strong>模拟演示日 · 14:00</strong><p>青禾研讨室 S01 · 6 人 · 已占用</p><p>松风研讨室 S02 · 10 人 · 可预约</p><small>预约后可刷新查看记录，也可取消释放时段。</small></figure></div></article>
+<article><div class="tag">07 / 复盘与改进</div><h2>从模拟预约走向真实服务</h2><p class="lead">接入真实空位和预约需要图书馆授权接口。</p><div class="rows"><p><b>下一步</b>　接入只读空位 API，并记录查询时间。</p><p><b>评估</b>　用固定问例检查筛选正确性、来源一致性和失败提示。</p><p><b>复现</b>　代码、样例数据、Skill、启动说明与演示用例随仓库交付。</p></div></article>
 <nav><span id="page"></span><button id="prev">← 上一页</button><button id="next">下一页 →</button><button id="full">全屏</button></nav>
 <script>
 const pages=[...document.querySelectorAll('article')];let i=0;

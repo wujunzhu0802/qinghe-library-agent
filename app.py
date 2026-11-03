@@ -2,6 +2,8 @@
 import argparse
 import json
 import os
+import re
+from planner import available, bookings, cancel, reserve
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.error import URLError
 
@@ -36,6 +38,8 @@ class Handler(BaseHTTPRequestHandler):
             self.reply(404, {"error": "页面不存在"})
 
     def do_POST(self):
+        if self.path in ("/plan", "/book", "/bookings", "/cancel"):
+            return self.planner_request()
         if self.path != "/ask":
             return self.reply(404, {"error": "接口不存在"})
         try:
@@ -59,7 +63,28 @@ class Handler(BaseHTTPRequestHandler):
                 return self.reply(502, {"error": "模型调用失败。请检查网络、模型名和 API 配置，或切到离线演练。", "trace": trace})
         else:
             answer = offline(q, trace)
-        self.reply(200, {"answer": answer, "trace": trace, "mode": mode})
+        self.reply(200, {"answer": answer, "trace": trace, "mode": mode, "follow_up": not trace and ("人数" in answer or "几人" in answer or "几位" in answer)})
+
+    def planner_request(self):
+        try:
+            size = int(self.headers.get("Content-Length", "0"))
+            if not 0 < size <= 8192:
+                raise ValueError("请求格式错误。")
+            body = json.loads(self.rfile.read(size))
+            session = body.get("session", "")
+            if not re.fullmatch(r"[a-f0-9-]{36}", session):
+                raise ValueError("会话无效，请刷新网页。")
+            if self.path == "/bookings":
+                result = bookings(session)
+            elif self.path == "/cancel":
+                result = cancel(session, body["id"])
+            else:
+                args = [body["seats"], body["discussion"], body["slot"]]
+                result = available(*args) if self.path == "/plan" else reserve(
+                    session, body["space"], args[2], args[0], args[1])
+            self.reply(200, {"items": result})
+        except (ValueError, KeyError, TypeError, AttributeError) as exc:
+            self.reply(400, {"error": str(exc) if isinstance(exc, ValueError) else "请求格式错误。"})
 
 
 if __name__ == "__main__":
